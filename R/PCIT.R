@@ -1,7 +1,10 @@
-pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass.file=TRUE, verbose=getOption("verbose"), tol.type=c("mean", "min", "max", "median") ) {
+pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verbose=getOption("verbose"), tol.type=c("mean", "min", "max", "median"), pass.type=c("file", "memory", "db") ) {
+	pass.type <- match.arg(pass.type)
+	tol.type <- match.arg(tol.type)
+	
   # Create data structure to store the results
   results <- list()
-  results$nonsignif <- NULL
+  results$idx <- NULL
   
   if(force.serial) {
     if(force.parallel) {
@@ -22,19 +25,26 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass
     }
     if(verbose) { cat("Running serial implementation of pcit().\n") }
     results <- .pcit(m, verbose=verbose, tol.type=tol.type)
-    results$nonsignif <- .sub2ind(results$nonsignif, nrow=nrow(m), ncol=ncol(m))
+    results$idx <- .sub2ind(results$idx, nrow=nrow(m), ncol=ncol(m))
     
   } else {
     # lets run the parallel implementation
     if(verbose) { cat("Running parallel implementation of pcit().\n") }
     
-    # We're gonna pass the data to the slaves in a file if requested
-    if(pass.file) {
-      RData <- tempfile()
-      save(m, file=RData)
-    } else {
-      cat("WARN: setting pass.file=FALSE may provide a small amount of speedup by passing data around in memory.\n  However, there is a limit to the size of the data set that can be passed in memory.\n  If you receive an 'Error: serialization is too large to store in a raw vector', you have reached this limit and should use pass.file=TRUE\n")
-    }
+    # We're gonna pass the data to the slaves using one of the possible options
+		switch(pass.type,
+			file = {
+				RData <- tempfile()
+				save(m, file=RData)
+			},
+			memory = {
+				cat("WARN: setting pass.file=FALSE may provide a small amount of speedup by passing data around in memory.\n  However, there is a limit to the size of the data set that can be passed in memory.\n  If you receive an 'Error: serialization is too large to store in a raw vector', you have reached this limit and should use pass.type=\"file\" (the default)\n")
+
+			},
+			db = {
+				stop("Using a DB to pass data is not yet implemented.\n")
+			}
+		)
     
     nSlaves <- mpi.comm.size()-1
     
@@ -64,22 +74,23 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass
           # do a task, taking data/objects from the objList
           # Find thos entries that are zero'd out in the m_sub_pcit matrix and convert them back to indices for the full matrix
           # Lets not check to see see which zero's were changed only by this slave as we'd need more time and memory to do so - i.e. a nGenes x nGenes Boolean matrix for each check
-          if (pass.file) {
-            # load the whole data matrix from file and run PCIT() on it
-            load(RData)
-            results <- .pcit(m, x=objList$x, verbose=verbose, tol.type=tol.type)
-            results$nonsignifOffset <- 1
-            
-          } else {
-            # get the portion of the data matrix and do PCIT() on it
-            results <- .pcit(objList$m, x=objList$x, verbose=verbose, tol.type=tol.type)
-            # convert array indicies returned by pcit into indices equivilent to the full matrix
-            results$nonsignif <- results$nonsignif + objList$nonsignifOffset - 1
-            results$nonsignifOffset <- objList$nonsignifOffset
-            
-          }
+          switch(pass.type,
+						file = {
+							# load the whole data matrix from file and run PCIT() on it
+							load(RData)
+							results <- .pcit(m, x=objList$x, verbose=verbose, tol.type=tol.type)
+							results$nonsignifOffset <- 1
+						},
+						memory = {
+							results <- .pcit(m, x=objList$x, verbose=verbose, tol.type=tol.type)
+							results$nonsignifOffset <- 1
+						},
+						db = {
+							stop("Using a DB to pass data is not yet implemented.\n")
+						}
+					)
           
-          results$nonsignif <- .sub2ind(results$nonsignif, nrow=nrow(m), ncol=ncol(m))
+          results$idx <- .sub2ind(results$idx, nrow=nrow(m), ncol=ncol(m))
           
           # Send a results message back to the master
           mpi.send.Robj(results,0,2)
@@ -101,9 +112,19 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass
     # send data object(s) to all the slaves
     mpi.bcast.Robj2slave(tol.type)
     
-    if (pass.file) {
-      mpi.bcast.Robj2slave(RData)
-    }
+		switch(pass.type,
+			file = {
+				mpi.bcast.Robj2slave(RData)
+			},
+			memory = {
+				# This means each slave has it's own copy of the master correlation matrix
+				mpi.bcast.Robj2slave(m)
+			},
+			db = {
+				stop("Using a DB to pass data is not yet implemented.\n")
+			}
+		)
+		
     # Send function(s) to all the slaves
     mpi.bcast.Robj2slave(slavefunction)
     # Call the function in all the slaves to get them ready to
@@ -111,7 +132,7 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass
     mpi.bcast.cmd(slavefunction())
     
     # define a list of tasks
-    tasks <- defineTasks(nGenes=nrow(m), nSlaves=nSlaves)
+    tasks <- defineTasks(n=nrow(m), nSlaves=nSlaves)
     
     junk <- 0
     exited <- 0
@@ -132,23 +153,18 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass
           mpi.send.Robj(junk,slave_id,2)
         }
         if (length(tasks) > 0) {
-          if (pass.file) {
-            # send the job with data loaded from file
-            mpi.send.Robj(tasks[[1]], slave_id, 1)
-            
-          } else {
-            # send only a portion of the data matrix to be as memory efficient as possible
-            xMin <- min(tasks[[1]]$x)
-            # get the minimaml size matrix to pass to the slave
-            # off-set the values of x to correspond to the correct values for m.sub
-            x.new <- tasks[[1]]$x - xMin + 1
-            
-            # send this info as a list of objects to the slave to deal with
-            objList <- list(m=m[xMin:nrow(m), xMin:nrow(m)], indOffset=xMin, x=x.new)
-            
-            # Send a task, and then remove it from the task list
-            mpi.send.Robj(objList, slave_id, 1)
-          }
+					switch(pass.type,
+						file = {
+							# send the job with data loaded from file
+							mpi.send.Robj(tasks[[1]], slave_id, 1)
+						},
+						memory = {
+							mpi.send.Robj(tasks[[1]], slave_id, 1)
+						},
+						db = {
+							stop("Using a DB to pass data is not yet implemented.\n")
+						}
+					)
           
           tasks[[1]] <- NULL 
           
@@ -161,7 +177,22 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass
         # compile each subset into a master result
         
         # for linear ind which are positions of non-significnat connections - basically, a zero in one/both of results and message
-        results$nonsignif <- unique(c(results$nonsignif, message$nonsignif))
+        if(verbose) {
+          cat("Master: calculating unique indicies ... ")
+        }
+				
+				if (is.null(results$idx)) {
+					# if the master doesn't have any indices yet, just assign the result from the slave
+					# The slave will only have zero'd out connections within the sub matrix it was dealing with
+					results$idx <- message$idx
+				} else {
+					# combining data from slave to that which the master already knows about
+					results$idx <- intersect(results$idx, message$idx)
+				}
+				
+        if(verbose) {
+          cat("DONE\n")
+        }
         
         # for linear ind which are positions of significant connections - basically, a 1 in both results and message
         # BUT - only from the same overlapping sub matrix - need to append those indices from outside the overlapping region of the larger matrix
@@ -179,28 +210,37 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, pass
         cat("ERROR: Slave ", slave_id, ": ", message,"\n")
       }
     }
-    
-    # clean up
-    if (pass.file) {
-      unlink(RData)
+    if(verbose) {
+      cat("Master: completed pcit().\n")
     }
+    # clean up
+		switch(pass.type,
+			file = {
+				unlink(RData)
+			},
+			memory = {
+				
+			},
+			db = {
+				stop("Using a DB to pass data is not yet implemented.\n")
+			}
+		)
     if (child_errors) {
       stop("Errors in R slaves.  See last.warnings or check slave logs")
     }
   }
   # Back to doing things in common with both serial and parallel implementations
-  
+	
   return(results)
 }
 
 # based on equal "work" per task
-defineTasks <- function(nGenes, nSlaves, tasksPerSlave=1, plot=FALSE) {
+defineTasks <- function(n, nSlaves, tasksPerSlave=1, plot=FALSE) {
   
   # calculate how much "work" each value of x will need
-  work <- vector()
-  for(x in 1:(nGenes-2)) {
-    work[x] <- ((nGenes-1-x)*(nGenes-x))/2    # this is just the sum of 1:nGenes-2 but more efficient for large values of nGenes
-  }
+	# this is equivilant to nCm(n-m+1,3) - nCm(n-m,3) where n = number of genes and m is in the set [1:n-2]
+	m <- 1:(n-2)
+	work <- ((n-m)*(n-m-1))/2
   
   slice <- function(v, n){
     subtot <- floor(sum(v)/n)
@@ -216,13 +256,13 @@ defineTasks <- function(nGenes, nSlaves, tasksPerSlave=1, plot=FALSE) {
   }
   
   
-  work_slices <- slice(work, nSlaves*tasksPerSlave)
+  slice_boundaries <- slice(work, nSlaves*tasksPerSlave)
   
   tasks <- vector('list')
   colours <- vector()
-  for(i in 1:(length(work_slices)-1)) {
-    start <- work_slices[i]+1
-    end <- work_slices[i+1]
+  for(i in 1:(length(slice_boundaries)-1)) {
+    start <- slice_boundaries[i]+1
+    end <- slice_boundaries[i+1]
     
     tasks[[length(tasks)+1]] <- list(x=(start:end))
     colours <- append(colours,rep(i,end-start+1))
@@ -230,9 +270,11 @@ defineTasks <- function(nGenes, nSlaves, tasksPerSlave=1, plot=FALSE) {
   
   if (plot) {
     par(mfrow=c(2:1))
-    plot(work, col=colours, ylab="Work", xlab="x", main=paste("Work per x - Colours Showing Split of x into",nSlaves*tasksPerSlave,"tasks"))
-    plot(cumsum(work)/max(cumsum(work))*100, col=colours, pch=20, ylab="Proportion of Total Work", xlab="x", main=paste("Cumlative Work - Colours Showing Split of x into",nSlaves*tasksPerSlave,"tasks"))
-    abline(h=c(cumsum(work)[c(work_slices[2:(length(work_slices)-1)])]/max(cumsum(work))*100))
+    # Colours indicate the sets of gene trios assigned to the same task. By default, there is 1 task per slave CPU
+    plot(work, col=colours, pch=20, ylab="Work", xlab="Gene Trio Set (m)", main="Work per Set of Gene Trios")
+    
+    plot(cumsum(work)/max(cumsum(work))*100, col=colours, pch=20, ylab="Cumlative Work (%)", xlab="Gene Trio Set (m)", main="Cumlative Work for Sets of Gene Trios")
+    abline(h=c(cumsum(work)[c(slice_boundaries[2:(length(slice_boundaries)-1)])]/max(cumsum(work))*100))
   }
   
   return(tasks)
@@ -250,8 +292,99 @@ clusteringCoefficientPercent <- function(adj) {
   return(length(d1) / length(d) *100)
 }
 
-plotCorCoeff <- function(m, nonSignif, leg.txt=c("All", "PCIT Significant"), ...) {
-  .hist(m, nonSignif, leg.txt=leg.txt, ...)
+plotCorCoeff <- function(m, idx, col=c("black"), breaks="Scott", ...) {
+  col.default <- "grey75"
+	
+	if(length(col) != length(names(idx))) {
+		stop("The number of colours (", length(col) ,") does not match the number of indices list elements (", length(names(idx)) ,").")
+	}
+	
+	# get data from just one triangle and only that which is not NA
+	dat <- m[upper.tri(m) & !is.na(m)]
+	all.hist <- hist(dat, plot=FALSE, breaks=breaks)
+	
+	# get the break information from all.hist
+	breaks <- all.hist$breaks
+	
+	# plot the distribution for all m values
+	plot.new()
+  plot.window(xlim=range(breaks),
+    ylim=range(0, all.hist$counts))
+  rect(breaks[-length(breaks)], 0,
+    breaks[-1], all.hist$counts, col=col.default, ...)
+	
+	# for each vector of indices in the idx list, superimpose a distribution with the same breaks as all.hist
+	for (i in 1:length(idx)) {
+		dat <- m[intersect(idx[[i]], which(upper.tri(m)))]
+		
+		i.hist <- hist(dat, plot=FALSE, breaks=breaks)
+		rect(i.hist$breaks[-length(i.hist$breaks)], 0,
+			i.hist$breaks[-1], i.hist$counts, col=col[i], ...)
+		
+	}
+	
+	axis(1)
+  axis(2)
+  title(main="Density Distribution of Correlation Coefficients", xlab="Correlation Coefficient", ylab="Frequency")
+  
+	# Still need to plot the legend
+	if( length(names(idx)) >= 1 ) {
+    legend(-1, max(all.hist$counts), fill=c(col.default, col), legend=c("All", names(idx)))
+  }
+}
+
+idx <- function(result) {
+	return(result$idx)
+}
+
+idxInvert <- function(m, idx) {
+	if (inherits(m, "matrix")) {
+		nodes <- nrow(m)
+	} else if (inherits(m, "numeric")) {
+		nodes <- m
+	} else {
+		stop("Argument 'm' must be a matrix or a numeric")
+	}
+	return(setdiff(1:(nodes^2), idx))
+}
+
+pcitMemoryRequirement <- function(m, units=c("MB", "bytes", "KB", "GB", "TB"), nCopies=3) {
+	double.bytes <- 8
+	units <- match.arg(units)
+	
+	if (inherits(m, "matrix")) {
+		nodes <- nrow(m)
+	} else if (inherits(m, "numeric")) {
+		nodes <- m
+	} else {
+		stop("Argument 'm' must be a matrix or a numeric")
+	}
+	
+	switch(units,
+    "bytes" = { denominator <- 1024^0 },
+		"KB" = { denominator <- 1024^1 },
+    "MB" = { denominator <- 1024^2 },
+    "GB" = { denominator <- 1024^3 },
+		"TB" = { denominator <- 1024^4 }
+  )
+	
+	ram <- nodes^2*double.bytes*nCopies / denominator
+	
+	return(list("RAM" = ram, "units" = units))
+}
+
+maxMatrixSize <- function(ram, units=c("MB", "bytes", "KB", "GB", "TB"), nCopies=3) {
+	units <- match.arg(units)
+	switch(units,
+    "bytes" = { units <- 0 },
+		"KB" = {units <- 1 },
+    "MB" = { units <- 2 },
+    "GB" = { units <- 3 },
+		"TB" = { units <- 4 }
+  )
+	
+	return(floor(sqrt(ram*(1024^units)/(8*nCopies))))
+	
 }
 
 # below are my scribbles for creating an S4 complient class/methods etc

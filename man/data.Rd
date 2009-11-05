@@ -1,17 +1,24 @@
 \name{data}
 \alias{data}
-\alias{m1}
-\alias{m2}
-\alias{m3}
+\alias{m}
 \non_function{}
+\keyword{
+	datasets
+}
 \title{
-  PCIT Data Sets
+  Demo Data
 }
 \description{
-  Data sets required for running the demo(s)
+  Example/mock correlation data set for use as input for running the demo.
 }
 \usage{
   data(PCIT)
+}
+\examples{
+	data(PCIT)
+	m <- m[1:200,1:200]        # just use a small subset of the data
+	result <- pcit(m)
+	idx <- idx(result)
 }
 \author{
   Nathan S. Watson-Haigh

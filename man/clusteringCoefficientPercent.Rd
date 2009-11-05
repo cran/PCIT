@@ -1,11 +1,10 @@
 \name{clusteringCoefficientPercent}
 \alias{clusteringCoefficientPercent}
 \title{
-  Calculate the clustering coefficient measured as the percentage of non-zero correlation coefficients
+  Calculate the clustering coefficient as a percentage
 }
 \description{
-  Given a correlation matrix the PCIT algorithm is applied. Linear indices are
-  returned for those correlations found to be non-significant.
+  Given an adjacency matrix, calculate the clustering coefficient as a percentage of non-zero adjacencies.
 }
 \usage{
   clusteringCoefficientPercent(adj)
@@ -16,6 +15,17 @@
 }
 \value{
   A numerical between 0 and 100.
+}
+\examples{
+	data(PCIT)
+	m <- m[1:200,1:200]        # just use a small subset of the data
+	result <- pcit(m)
+	m[idx(result)] <- 0
+	
+	clusteringCoefficientPercent(m)
+}
+\seealso{
+	\code{\link{clusteringCoefficient}}
 }
 \author{
   Nathan S. Watson-Haigh

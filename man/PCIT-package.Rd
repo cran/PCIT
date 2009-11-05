@@ -1,5 +1,6 @@
 \name{PCIT-package}
 \alias{PCIT-package}
+\alias{PCIT}
 \docType{package}
 \title{
 Partial Correlation coefficient with Information Theory (PCIT)
@@ -8,14 +9,17 @@ Partial Correlation coefficient with Information Theory (PCIT)
   This package provides the necessary functions for performing the
   Partial Correlation coefficient with Information Theory (PCIT) algorithm
   developed by Reverter and Chan (2008). The PCIT algorithm identifies
-  significant gene to gene associations to define edges in a weighted network.
+  meaningful correlations to define edges in a weighted network.
+	
+	The algorithm can be applied to any correlation-based network including but
+	not limited to gene co-expression networks.
 }
 \details{
 \tabular{ll}{
   Package: \tab PCIT\cr
   Type: \tab Package\cr
-  Version: \tab 1.01-1\cr
-  Date: \tab 2009-08-25\cr
+  Version: \tab 1.02-1\cr
+  Date: \tab 2009-11-05\cr
   License: \tab GPL-3\cr
   LazyLoad: \tab yes\cr
 }
