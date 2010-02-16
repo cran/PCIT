@@ -338,13 +338,16 @@ idx <- function(result) {
 }
 
 idxInvert <- function(m, idx) {
-	if (inherits(m, "matrix")) {
-		nodes <- nrow(m)
-	} else if (inherits(m, "numeric")) {
+	if (is.numeric(m)) {
 		nodes <- m
 	} else {
-		stop("Argument 'm' must be a matrix or a numeric")
+		nodes <- try(nrow(m), silent=TRUE)
+		if (class(nodes) == "try-error") {
+			cat("ERROR: argument 'm' must be a numeric OR an object on which nrow() can be performed.\n\n", geterrmessage())
+			return(FALSE)
+		}
 	}
+	
 	return(setdiff(1:(nodes^2), idx))
 }
 
@@ -352,12 +355,14 @@ pcitMemoryRequirement <- function(m, units=c("MB", "bytes", "KB", "GB", "TB"), n
 	double.bytes <- 8
 	units <- match.arg(units)
 	
-	if (inherits(m, "matrix")) {
-		nodes <- nrow(m)
-	} else if (inherits(m, "numeric")) {
+	if (is.numeric(m)) {
 		nodes <- m
 	} else {
-		stop("Argument 'm' must be a matrix or a numeric")
+		nodes <- try(nrow(m), silent=TRUE)
+		if (class(nodes) == "try-error") {
+			cat("ERROR: argument 'm' must be a numeric OR an object on which nrow() can be performed.\n\n", geterrmessage())
+			return(FALSE)
+		}
 	}
 	
 	switch(units,
@@ -386,49 +391,3 @@ maxMatrixSize <- function(ram, units=c("MB", "bytes", "KB", "GB", "TB"), nCopies
 	return(floor(sqrt(ram*(1024^units)/(8*nCopies))))
 	
 }
-
-# below are my scribbles for creating an S4 complient class/methods etc
-#setClass("pcit",
-#  representation(
-#    dend = "NULL"
-#  ),
-#  contains="matrix",
-#  prototype=prototype(
-#    new("matrix")
-#  )
-#)
-
-#setMethod("show", "pcit",
-#  function(object) {
-#    cat("pcit object\n")
-#    cat("  Type       :", class(object), "\n")
-#    cat("  Size       :", paste(dim(object), collapse="x"), "\n")
-#    cat("  Dendrogram :", if(is.null(object@dend)) { "FALSE" } else { "TRUE" }, "\n")
-#    cat("\n")
-#  }
-#)
-
-#setMethod("image", "pcit",
-#  function(x, labRow=FALSE, labCol=FALSE, scale="none", ...) {
-#    heatmap(
-#      x@.Data,
-#      Rowv = x@dend,
-#      Colv = x@dend,
-#      labRow = labRow,
-#      labCol = labCol,
-#      scale = scale,
-#      ...
-#    )
-#  }
-#)
-
-#setValidity("pcit",
-#  function(object) {
-#    retval <- NULL
-#    if(! isSymmetric(object)) {
-#      retval <- c(retval, "Data matrix must be symmetrical")
-#    }
-#    if(is.null(retval)) return(TRUE)
-#    else return(retval)
-#  }
-#)

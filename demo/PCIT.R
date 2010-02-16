@@ -16,10 +16,13 @@ system.time(result <- pcit(m))
 # check that we got the same answer using both functions
 all.equal(m[idx(result_serial)], m[idx(result)])
 
-# create a copy of the correlation matrix and set all cells to zero which have been identified by PCIT as being non-significant
+# get the matric indices for the meaningful and unmeaningful correlations
+meaningful.idx <- idx(result_serial)
+unmeaningful.idx <- idxInvert(nrow(m), meaningful.idx)
+
+# create a copy of the correlation matrix and set unmeaingful correlations to zero
 m.new <- m
-ind <- idx(result_serial)
-m.new[ind] <- 0
+m.new[unmeaningful.idx] <- 0
 
 cc <- clusteringCoefficient(m.new)
 ccp <- clusteringCoefficientPercent(m.new)
@@ -29,7 +32,11 @@ op <- par(mfrow=c(3,2))
 plot(density(m[upper.tri(m)]), main="Density Plot of Raw Correlation Coefficients", xlab="Correlation Coefficient")
 hist(cc, main="Connectivity Distribution", xlab="Proportion of Connections", ylab="Number of Genes")
 hist(cc*length(cc), main="Connectivity Distribution", xlab="Number of Connections", ylab="Number of Genes")
-plotCorCoeff(m, list("PCIT Significant" = ind), col=c("black"))
-plotCorCoeff(m, list("1st 20000"=c(1:20000), "PCIT Significant" = ind), col=c("black", "red"))
-plotCorCoeff(m, list("PCIT Significant" = ind, "1st 20000"=c(1:20000)), col=c("black", "red"))
+# plot the distribution of all correlations superimposed by that of the meaningful corrections in black
+plotCorCoeff(m, list("PCIT Significant" = meaningful.idx), col=c("black"))
+# plot the distribution of all correlations superimposed by that of the meaningful corrections in black and the absolute correlations > 0.5 in red
+abs.idx <- which(abs(m) > 0.5)
+plotCorCoeff(m, list("abs. cor. > 0.5" = abs.idx, "PCIT Significant" = meaningful.idx), col=c("red", "black"))
+# we'll change the order and use some transparent colours using rgb()
+plotCorCoeff(m, list("PCIT Significant" = meaningful.idx, "abs. cor. > 0.5" = abs.idx), col=c(rgb(1,0,0,0.7), rgb(0,0,0,0.7)))
 par(op)

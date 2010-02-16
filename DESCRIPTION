@@ -1,6 +1,6 @@
 Package: PCIT
-Version: 1.02-1
-Date: 2009-11-05
+Version: 1.02-2
+Date: 2010-02-16
 Title: PCIT algorithm - Partial Correlation Coefficient with
         Information Theory
 Author: Nathan S. Watson-Haigh
@@ -15,9 +15,10 @@ Description: This package provides the necessary functions for
 Type: Package
 License: GPL-3
 Suggests: Rmpi
-URL: http://www.csiro.au/people/Nathan.Watson-Haigh.html
-        http://dx.doi.org/10.1093/bioinformatics/btn482
+URL: http://dx.doi.org/10.1093/bioinformatics/btn482
+        http://bioinformatics.oxfordjournals.org/cgi/content/abstract/26/3/411
+        http://www.csiro.au/people/Nathan.Watson-Haigh.html
 LazyLoad: yes
-Packaged: 2009-11-05 06:37:38 UTC; WAT410
+Packaged: 2010-02-16 01:15:44 UTC; wat410
 Repository: CRAN
-Date/Publication: 2009-11-05 12:34:16
+Date/Publication: 2010-02-16 07:31:19

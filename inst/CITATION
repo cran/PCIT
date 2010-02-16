@@ -1,0 +1,35 @@
+citHeader("To  cite  package  'PCIT'  in  publications  use:")
+
+desc  <-  packageDescription("PCIT")
+vers  <-  paste("R  package  version",  desc$Version)
+
+citEntry(
+	entry = "article",
+	
+	title = "{PCIT}: an R package for weighted gene co-expression networks based on partial correlation and information theory approaches",
+	abstract = "Summary: We make the {PCIT} algorithm, used for detecting meaningful gene-gene associations in co-expression networks, available as an R package. Automatic detection of a suitable parallel environment is used such that scripts are portable between parallel and non-parallel environments with no modification of the script. Availability and implementation: Source code and binaries freely available (under {GPL}-3) for download via {CRAN} at {http://cran.r-project.org/package=PCIT}, implemented in R and supported on Linux and {MS} Windows. Contact: nathan.watson-haigh@csiro.au",
+	author = personList(
+		as.person("Nathan S. {Watson-Haigh}"),
+		as.person("Haja N. {Kadarmideen}"),
+		as.person("Antonio {Reverter}")
+	),
+	
+	journal = "Bioinformatics",
+	year = "2010",
+	month = "feb",
+	volume = "26",
+	number = "3",
+	pages = "411-413",
+	
+	url = "http://bioinformatics.oxfordjournals.org/cgi/content/abstract/26/3/411",
+	doi = "10.1093/bioinformatics/btp674",
+	
+	textVersion = paste(
+		"Nathan S. Watson-Haigh,  Haja N. Kadarmideen,  and Antonio Reverter (2010). ",
+		"PCIT: an R package for weighted gene co-expression networks based on partial correlation and information theory approaches. ",
+		"Bioinformatics. 26(3) 411-413.",
+		sep=""
+	),
+	
+	note = vers
+)

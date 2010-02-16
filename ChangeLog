@@ -1,0 +1,44 @@
+======
+1.02-2
+======
+	API Changes
+	-----------
+	1) none
+	
+	Major Changes
+	-------------
+	1) None
+	
+	Minor Changes/Bug Fixes
+	-----------------------
+	1) Fixed idxInvert() and pcitMemoryRequirement() so the user can now correctly pass a numeric or matrix as described in the documentation 
+	2) Added a CITATION file with details to be used when citing this package. See: citation("PCIT") for details
+	3) Cleaned up the demo file. In particular how to use get/use the results produced by pcit() and the use of plotCorCoeff()
+	
+======
+1.02-1
+======
+	API Changes
+	-----------
+	1) pcit() now returns the indices of the significant/meaningful connections rather than the non-significant
+	2) plotCorCoeff() now takes a list of indices to superimpose multiple distributions using the indices of the values
+	3) pass.file removed in favour of pass.type which can take one of several different values, the default being "file"
+	4) defineTasks() parameter nGenes changed to n to make it a bit more generic
+	5) Added the following functions:
+	   a) idx() - returns the indices associated with the result of pcit()
+		 b) idxInvert() - Inverts a vector of linear indices from a matrix
+	   c) maxMatrixSize() - Attempts to calculate the maximum correlation matrix size that can be handled with a given amount of RAM
+	   d) pcitMemoryRequirements() - Attempts to calculate the memory requirement of pcit() for a given correlation matrix
+	
+	Major Changes
+	-------------
+	1) When pass.type="memory", the whole matrix is broadcasted to each slave, not just a portion. This is inefficient on memory as each slave creates a copy of the matrix. There is also an upper limit to the amount of data that can be broadcastedto a slave (due to serialisation) that may be reached. However, this change should make it easier to test the use of MP_SHARED_MEMORY=yes env variable and for calculating the significant indices rather than the insignificant ones! which should be faster - eventually.
+	
+	Minor Changes/Bug Fixes
+	-----------------------
+	1) Removed the redundant m1 and m2 example data sets and renamed m3 to m.
+	2) Added example code to documentation.
+	3) Changed warning message when Rmpi loads but fails to spawn slaves
+	4) Clarified documentation on what values are used in the distribution plot.
+	5) Modified labels on figure produced by defineTasks()
+	6) Others!
