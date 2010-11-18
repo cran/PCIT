@@ -67,7 +67,7 @@
   index <- is.na(m)
   if (sum(index)>0) {
     m[index] <- 0
-    warning(paste(sum(index), " values were found to be N/A and set to zero.", sep=""))
+    warning(paste(sum(index), " values were found to be N/A and set to zero before running pcit().", sep=""))
   }
   
   m_partials <- m
@@ -122,13 +122,17 @@
   
 }
 
+.freeSlaves <- function(mpi.exit=FALSE) {
+	if (is.loaded("mpi_initialize")){
+		if (mpi.comm.size(1) > 0){
+			mpi.close.Rslaves()
+		}
+		if(mpi.exit) {
+			mpi.exit()
+		}
+	}
+}
+
 .Last <- function(){
-  if (is.loaded("mpi_initialize")){
-    if (mpi.comm.size(1) > 0){
-      #print("Please use mpi.close.Rslaves() to close slaves.")
-      mpi.close.Rslaves()
-    }
-    #print("Please use mpi.quit() to quit R")
-    .Call("mpi_finalize")
-  }
+	.freeSlaves(mpi.exit=TRUE)
 }

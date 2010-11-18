@@ -1,4 +1,23 @@
 ======
+1.03-1
+======
+	API Changes
+	-----------
+	1) added a new function, getEdgeList(m), which converts an adjacency matrix into an edge list 
+	
+	Major Changes
+	-------------
+	1) None
+	
+	Minor Changes/Bug Fixes
+	-----------------------
+	1) Updated checks on class of object m passed into idxInvert(m, idx) and pcitMemoryRequirement(m)
+	2) Refactored .Last() which closes slave processors if Rmpi was used
+	3) Refactored some code in pcit()to make handling force.serial and force.parallel options clearer
+	4) Updated a warning message when NA's are found in the adjacency matrix during pcit()
+	5) Updated some indentation in the source
+	
+======
 1.02-2
 ======
 	API Changes

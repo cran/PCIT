@@ -6,7 +6,7 @@ m <- m[1:200,1:200]        # just use a small subset of the data
 dim(m)
 m[1:10,1:10]
 
-# apply the PCIT algorithm, forcing the serial implementation - Should take about 45s on a 2.3Ghz CPU
+# apply the PCIT algorithm, forcing the serial implementation
 system.time(result_serial <- pcit(m, force.serial=TRUE))
 
 # apply the PCIT algorithm, using the parallel implementation if we can, otherwise fall back to the serial implementation
@@ -23,6 +23,9 @@ unmeaningful.idx <- idxInvert(nrow(m), meaningful.idx)
 # create a copy of the correlation matrix and set unmeaingful correlations to zero
 m.new <- m
 m.new[unmeaningful.idx] <- 0
+
+# convert adjacency matrix into an edge list
+edgeList <- getEdgeList(m.new)
 
 cc <- clusteringCoefficient(m.new)
 ccp <- clusteringCoefficientPercent(m.new)
