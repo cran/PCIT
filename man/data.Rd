@@ -6,13 +6,13 @@
 	datasets
 }
 \title{
-  Demo Data
+	Demo Data
 }
 \description{
-  Example/mock correlation data set for use as input for running the demo.
+	Example/mock correlation data set for use as input for running the demo.
 }
 \usage{
-  data(PCIT)
+	data(PCIT)
 }
 \examples{
 	data(PCIT)
@@ -21,5 +21,5 @@
 	idx <- idx(result)
 }
 \author{
-  Nathan S. Watson-Haigh
+	Nathan S. Watson-Haigh
 }

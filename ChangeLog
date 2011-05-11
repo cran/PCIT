@@ -1,4 +1,21 @@
 ======
+1.04-1
+======
+	API Changes
+	-----------
+	1) Changes to the way clusteringCoefficient() is called
+	
+	Major Changes
+	-------------
+	1) Fixed clusteringCoefficient() so it now correctly calculates the Watts and Strogatz local
+	   clustering coefficient - Thanks to Michael McAssey for pointing this out. It also now uses a
+	   Fortran implementation for speed.
+	
+	Minor Changes/Bug Fixes
+	-----------------------
+	1) Minor source code formatting
+	
+======
 1.03-1
 ======
 	API Changes

@@ -1,11 +1,11 @@
 \name{defineTasks}
 \alias{defineTasks}
 \title{
-  Define a list of tasks for slave CPUs
+	Define a list of tasks for slave CPUs
 }
 \description{
-  This function defines a list of PCIT tasks to be undertaken by slave CPUs in
-  a parallel environment. The set of calculations performed for each trio of
+	This function defines a list of PCIT tasks to be undertaken by slave CPUs in
+	a parallel environment. The set of calculations performed for each trio of
 	genes are entirely independent. Workload is distributed evenly among the
 	slaves in order to maximise speed by assigning sets of gene trios to a task.
 	The task is then carried out by a slave CPU. This assignment of gene trios
@@ -34,17 +34,17 @@
 
 }
 \usage{
-  defineTasks(n, nSlaves, tasksPerSlave = 1, plot = FALSE)
+	defineTasks(n, nSlaves, tasksPerSlave = 1, plot = FALSE)
 }
 \arguments{
-  \item{n}{ - The total number of genes. }
-  \item{nSlaves}{ - The number of slave CPUs. }
-  \item{tasksPerSlave}{ - The number of tasks to create for each slave CPU. }
-  \item{plot}{ - A boolean as to whether to generate a plot showing the total
-                 "work" to be carried out by each task. }
+	\item{n}{ - The total number of genes. }
+	\item{nSlaves}{ - The number of slave CPUs. }
+	\item{tasksPerSlave}{ - The number of tasks to create for each slave CPU. }
+	\item{plot}{ - A boolean as to whether to generate a plot showing the total
+	"work" to be carried out by each task. }
 }
 \author{
-  Nathan S. Watson-Haigh
+	Nathan S. Watson-Haigh
 }
 \examples{
 	defineTasks(n=100, nSlaves=5, plot=TRUE)

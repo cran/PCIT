@@ -1,5 +1,5 @@
 useDynLib(PCIT)
 exportPattern("^[^\\.]")
 export(
-  pcit
+	pcit
 )

@@ -1,19 +1,19 @@
 \name{idx}
 \alias{idx}
 \title{
-  Get indicies for significant edges
+	Get indicies for significant edges
 }
 \description{
-  Get the indicies for the significant edges in a network.
+	Get the indicies for the significant edges in a network.
 }
 \usage{
-  idx <- idx(result)
+	idx(result)
 }
 \arguments{
-  \item{result}{ - A result object returned from pcit() }
+	\item{result}{ - A result object returned from pcit() }
 }
 \value{
-  Linear indices are returned for those correlations found to be significant.
+	Linear indices are returned for those correlations found to be significant.
 }
 \examples{
 	data(PCIT)
@@ -23,5 +23,5 @@
 	idx <- idx(result)
 }
 \author{
-  Nathan S. Watson-Haigh
+	Nathan S. Watson-Haigh
 }

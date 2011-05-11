@@ -1,7 +1,7 @@
 citHeader("To  cite  package  'PCIT'  in  publications  use:")
 
-desc  <-  packageDescription("PCIT")
-vers  <-  paste("R  package  version",  desc$Version)
+desc <- packageDescription("PCIT")
+vers <- paste("R  package  version",  desc$Version)
 
 citEntry(
 	entry = "article",

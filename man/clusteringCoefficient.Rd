@@ -1,25 +1,23 @@
 \name{clusteringCoefficient}
 \alias{clusteringCoefficient}
 \title{
-  Calculate the clustering coefficient
+	Calculate the clustering coefficient
 }
 \description{
-  Calculate the clustering coefficient for each node in an adjacency matrix.
-	The clustering coefficient is defined as the proportion of existing
-  connections from the total possible (Watts and Strogatz, 1998).
+	Calculate the clustering coefficient for an adjacency matrix. By default, the local clustering coefficient
+	is calculated.
 }
 \usage{
-  clusteringCoefficient(adj)
+	clusteringCoefficient(adj, FUN='localClusteringCoefficient', \dots)
 }
 \arguments{
-  \item{adj}{ - An adjacency matrix. Calculating the clustering coefficient
-  only makes sense if some connections are zero  i.e. no connection.}
+	\item{adj}{ - An adjacency matrix. Calculating the clustering coefficient
+	only makes sense if some connections are zero  i.e. no connection.}
+	\item{FUN}{ - The function for calculating the clustering coefficient.}
+	\item{\dots}{ - Arguments to pass to FUN}
 }
 \value{
-  A vector of clustering coefficients for each node/gene of the adjacency matrix.
-}
-\references{
-  D.J. Watts and S.H. Strogatz. (1998) Collective dynamics of 'small-world' networks. Nature.  393(6684). 440-442.
+	The clustering coefficient(s) for the adjacency matrix.
 }
 \examples{
 	data(PCIT)
@@ -30,8 +28,9 @@
 	clusteringCoefficient(m)
 }
 \seealso{
+	\code{\link{localClusteringCoefficient}}
 	\code{\link{clusteringCoefficientPercent}}
 }
 \author{
-  Nathan S. Watson-Haigh
+	Nathan S. Watson-Haigh
 }

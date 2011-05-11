@@ -1,20 +1,20 @@
 \name{clusteringCoefficientPercent}
 \alias{clusteringCoefficientPercent}
 \title{
-  Calculate the clustering coefficient as a percentage
+	Calculate the clustering coefficient as a percentage
 }
 \description{
-  Given an adjacency matrix, calculate the clustering coefficient as a percentage of non-zero adjacencies.
+	Given an adjacency matrix, calculate the clustering coefficient as a percentage of non-zero adjacencies.
 }
 \usage{
-  clusteringCoefficientPercent(adj)
+	clusteringCoefficientPercent(adj)
 }
 \arguments{
-  \item{adj}{ - An adjacency matrix. Calculating the clustering coefficient
-  percentage only makes sense if some connections are zero  i.e. no connection. }
+	\item{adj}{ - An adjacency matrix. Calculating the clustering coefficient
+	percentage only makes sense if some connections are zero  i.e. no connection. }
 }
 \value{
-  A numerical between 0 and 100.
+	A numerical between 0 and 100.
 }
 \examples{
 	data(PCIT)
@@ -28,5 +28,5 @@
 	\code{\link{clusteringCoefficient}}
 }
 \author{
-  Nathan S. Watson-Haigh
+	Nathan S. Watson-Haigh
 }
