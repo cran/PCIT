@@ -1,4 +1,39 @@
 ======
+1.04-5
+======
+    API Changes
+    -----------
+    1) None
+    
+    Major Changes
+    -------------
+    1) None
+    
+    Minor Changes/Bug Fixes
+    -----------------------
+    1) None
+    
+    Build Changes
+    -------------
+    1) Removed top-level share directory to avoid package building "note" being issued.
+    
+
+======
+1.04-4
+======
+    API Changes
+    -----------
+    1) None
+    
+    Major Changes
+    -------------
+    1) None
+    
+    Minor Changes/Bug Fixes
+    -----------------------
+    1) Updated package meta data.
+    
+======
 1.04-1
 ======
 	API Changes
