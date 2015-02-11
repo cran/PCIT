@@ -45,7 +45,7 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verb
 			}
 	)
 	
-	nSlaves <- mpi.comm.size()-1
+	nSlaves <- Rmpi::mpi.comm.size()-1
 	
 	# Function the slaves will call to perform a validation on the
 	# fold equal to their slave number.
@@ -62,11 +62,11 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verb
 		done <- 0
 		while (done != 1) {
 			# Signal being ready to receive a new task 
-			mpi.send.Robj(junk,0,1)
+			Rmpi::mpi.send.Robj(junk,0,1)
 			
 			# Receive a object list from master
-			objList <- mpi.recv.Robj(mpi.any.source(),mpi.any.tag())
-			task_info <- mpi.get.sourcetag()
+			objList <- Rmpi::mpi.recv.Robj(Rmpi::mpi.any.source(),Rmpi::mpi.any.tag())
+			task_info <- Rmpi::mpi.get.sourcetag()
 			tag <- task_info[2]
 			
 			if (tag == 1) {
@@ -92,32 +92,32 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verb
 				results$idx <- .sub2ind(results$idx, nrow=nrow(m), ncol=ncol(m))
 				
 				# Send a results message back to the master
-				mpi.send.Robj(results,0,2)
+				Rmpi::mpi.send.Robj(results,0,2)
 				
 			} else if (tag == 2) {
 				# maybe send date() info back to the master so it can compile debugging info on the distribution of times each slave took?
 				done <- 1
 				if (verbose) {
-					cat("Slave", mpi.comm.rank(), "- FINISHED:", date(), "\n")
+					cat("Slave", Rmpi::mpi.comm.rank(), "- FINISHED:", date(), "\n")
 				}
 			}
 			# We'll just ignore any unknown messages
 		}
 		
-		mpi.send.Robj(junk,0,3)
+		Rmpi::mpi.send.Robj(junk,0,3)
 	}
 	
 	# We're in the parent.  
 	# send data object(s) to all the slaves
-	mpi.bcast.Robj2slave(tol.type)
+	Rmpi::mpi.bcast.Robj2slave(tol.type)
 	
 	switch(pass.type,
 			file = {
-				mpi.bcast.Robj2slave(RData)
+				Rmpi::mpi.bcast.Robj2slave(RData)
 			},
 			memory = {
 				# This means each slave has it's own copy of the master correlation matrix
-				mpi.bcast.Robj2slave(m)
+				Rmpi::mpi.bcast.Robj2slave(m)
 			},
 			db = {
 				stop("Using a DB to pass data is not yet implemented.\n")
@@ -125,10 +125,10 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verb
 	)
 	
 	# Send function(s) to all the slaves
-	mpi.bcast.Robj2slave(slavefunction)
+	Rmpi::mpi.bcast.Robj2slave(slavefunction)
 	# Call the function in all the slaves to get them ready to
 	# undertake tasks
-	mpi.bcast.cmd(slavefunction())
+	Rmpi::mpi.bcast.cmd(slavefunction())
 	
 	# define a list of tasks
 	tasks <- defineTasks(n=nrow(m), nSlaves=nSlaves)
@@ -138,8 +138,8 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verb
 	child_errors <- FALSE
 	while (exited < nSlaves) { 
 		# Receive a message from a slave 
-		message <- mpi.recv.Robj(mpi.any.source(),mpi.any.tag()) 
-		message_info <- mpi.get.sourcetag() 
+		message <- Rmpi::mpi.recv.Robj(Rmpi::mpi.any.source(),Rmpi::mpi.any.tag()) 
+		message_info <- Rmpi::mpi.get.sourcetag() 
 		slave_id <- message_info[1] 
 		tag <- message_info[2] 
 		
@@ -149,16 +149,16 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verb
 			# If errors have been found in children, don't give any new tasks
 			if (child_errors) {
 				cat("WARN: Telling slave ",slave_id," to exit\n");
-				mpi.send.Robj(junk,slave_id,2)
+				Rmpi::mpi.send.Robj(junk,slave_id,2)
 			}
 			if (length(tasks) > 0) {
 				switch(pass.type,
 						file = {
 							# send the job with data loaded from file
-							mpi.send.Robj(tasks[[1]], slave_id, 1)
+							Rmpi::mpi.send.Robj(tasks[[1]], slave_id, 1)
 						},
 						memory = {
-							mpi.send.Robj(tasks[[1]], slave_id, 1)
+							Rmpi::mpi.send.Robj(tasks[[1]], slave_id, 1)
 						},
 						db = {
 							stop("Using a DB to pass data is not yet implemented.\n")
@@ -168,7 +168,7 @@ pcit <- function(m, force.serial=FALSE, force.parallel=FALSE, nslaves=NULL, verb
 				tasks[[1]] <- NULL 
 				
 			} else {
-				mpi.send.Robj(junk, slave_id, 2)
+				Rmpi::mpi.send.Robj(junk, slave_id, 2)
 			}
 			
 		} else if (tag == 2) { 

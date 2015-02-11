@@ -7,24 +7,24 @@
 	# Load the MPI Environment if not already there.
 	if (!is.loaded('mpi_initialize')) {
 		if (sum((.packages())=='Rmpi') == 0) {
-		return(run_parallel)
-	}
-	require('Rmpi', quietly=TRUE)
+			return(run_parallel)
+		}
+		requireNamespace('Rmpi', quietly=TRUE)
 	}
 	
 	# Now, if Rmpi is loaded, make sure we have a bunch of slaves
 	if (is.loaded('mpi_initialize')) {
-		if (mpi.comm.size() > 2) {
+		if (Rmpi::mpi.comm.size() > 2) {
 			# It's already loaded and set up
 			return(TRUE)
 		}
 		
 		# Spawn as many slaves as possible
-		if (mpi.comm.size() < 2) {
+		if (Rmpi::mpi.comm.size() < 2) {
 			if(is.null(nslaves)) {
-				answer <- try(mpi.spawn.Rslaves(), silent=TRUE)
+				answer <- try(Rmpi::mpi.spawn.Rslaves(), silent=TRUE)
 			} else {
-				answer <- try(mpi.spawn.Rslaves(nslaves=nslaves), silent=TRUE)
+				answer <- try(Rmpi::mpi.spawn.Rslaves(nslaves=nslaves), silent=TRUE)
 			}
 			if (class(answer) == "try-error") {
 				cat("WARNING: Managed to load the Rmpi library but failed to spawn slaves (error message below) - Falling back to serial implementation.\n\n", geterrmessage())
@@ -34,12 +34,12 @@
 		
 		# If there's multiple slaves, AND this process is the master,
 		# run in parallel.
-		if (mpi.comm.size() > 2) {
-			if (mpi.comm.rank() == 0) {
+		if (Rmpi::mpi.comm.size() > 2) {
+			if (Rmpi::mpi.comm.rank() == 0) {
 				run_parallel <- TRUE
 			}
 		} else {
-			cat("WARN: I could only find", mpi.comm.size()-1, "slaves to work with. Parallel programming usually requires >= 2 slaves, but I'll continue anyway!\n")
+			cat("WARN: I could only find", Rmpi::mpi.comm.size()-1, "slaves to work with. Parallel programming usually requires >= 2 slaves, but I'll continue anyway!\n")
 			run_parallel <- TRUE
 		}
 	}
@@ -122,11 +122,11 @@
 
 .freeSlaves <- function(mpi.exit=FALSE) {
 	if (is.loaded("mpi_initialize")){
-		if (mpi.comm.size(1) > 0){
-			mpi.close.Rslaves()
+		if (Rmpi::mpi.comm.size(1) > 0){
+			Rmpi::mpi.close.Rslaves()
 		}
-		if(mpi.exit) {
-			mpi.exit()
+		if(Rmpi::mpi.exit) {
+			Rmpi::mpi.exit()
 		}
 	}
 }

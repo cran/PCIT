@@ -1,4 +1,43 @@
 ======
+1.5-2
+======
+    API Changes
+    -----------
+    1) None
+    
+    Major Changes
+    -------------
+    1) None
+    
+    Minor Changes/Bug Fixes
+    -----------------------
+    1) Changed from require('Rmpi') to requireNamespace('Rmpi'). Now all Rmpi functions are addressed directly through their namespace.
+    
+    Build Changes
+    -------------
+    1) None
+    
+======
+1.04-6
+======
+    API Changes
+    -----------
+    1) None
+    
+    Major Changes
+    -------------
+    1) None
+    
+    Minor Changes/Bug Fixes
+    -----------------------
+    1) Modified CITATION file to use the meta variable (available since R 2.8.0) for obtaining the Version info.
+    
+    Build Changes
+    -------------
+    1) None
+    
+
+======
 1.04-5
 ======
     API Changes
